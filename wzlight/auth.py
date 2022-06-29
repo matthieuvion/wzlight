@@ -11,7 +11,6 @@ class Auth:
     Call of Duty authorization flow, using Single Sign-on (SSO)
     """
 
-    loginUrl = "https://profile.callofduty.com/cod/mapp/login"
     registerDeviceUrl = "https://profile.callofduty.com/cod/mapp/registerDevice"
 
     _accessToken = None
@@ -64,7 +63,7 @@ class Auth:
         body = {"deviceId": self.DeviceId}
 
         async with self.session as client:
-            res: httpx.Response = await client.post(self.registerDeviceUrl, json=body)
+            res = await client.post(self.registerDeviceUrl, json=body)
 
             if res.status_code != 200:
                 raise Exception(
@@ -75,10 +74,11 @@ class Auth:
             self._accessToken = dict(data)["data"]["authHeader"]
 
 
-async def LoginWithSSO(sso=None):
+# // Original client : removed authentification with email/password, doable but now need a Captcha Solver...
+async def LoginWithSSO(sso: str = None):
     """
     Login to COD API. Requires Single Sign-on (sso) cookie value.
-    Can be find while inspecting browser login-in Activisition through your platform of choice (bnet, xbox etc.)
+    Inspect/find ACT SSO cookie while login-in Activisition through your platform of choice (bnet, xbox etc.)
     Parameters
     ----------
     sso: str, optional

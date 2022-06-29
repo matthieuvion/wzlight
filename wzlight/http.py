@@ -1,5 +1,7 @@
 import urllib.parse
 
+import httpx
+
 
 class Request:
     """
@@ -20,7 +22,6 @@ class Request:
 
     defaultBaseUrl = "https://www.callofduty.com/"
     myBaseUrl = "https://my.callofduty.com/"
-    squadsBaseUrl = "https://squads.callofduty.com/"
 
     accessToken = None
     deviceId = None
@@ -62,12 +63,16 @@ class HTTP:
             Response of the HTTP request.
         """
 
+        # // original client : added a timeout httpx object longer than httpx default (5 sec)
+        #    because COD API often throws a timeout, early
+        timeout = httpx.Timeout(15.0, connect=15.0)
+
         req.SetHeader("Authorization", f"Bearer {self.auth.AccessToken}")
         req.SetHeader("x_cod_device_id", self.auth.DeviceId)
 
         async with self.session as client:
             res = await client.request(
-                req.method, req.url, headers=req.headers, json=req.json
+                req.method, req.url, headers=req.headers, json=req.json, timeout=timeout
             )
 
             jsonTypes = [
@@ -98,7 +103,7 @@ class HTTP:
             )
         )
 
-    # GetPlayerProfile => GetProfile
+    # Original client : GetPlayerProfile => GetProfile
     async def GetProfile(self, platform: str, username: str, title: str, mode: str):
         return await self.Send(
             Request(
@@ -107,7 +112,7 @@ class HTTP:
             )
         )
 
-    # GetPlayerMatches => GetMatches
+    # Original client : GetPlayerMatches => GetMatches
     async def GetMatches(
         self,
         platform: str,
@@ -125,7 +130,7 @@ class HTTP:
             )
         )
 
-    # GetPlayerMatchesDetailed => GetMatchesDetailed
+    # Original client : GetPlayerMatchesDetailed => GetMatchesDetailed
     async def GetMatchesDetailed(
         self,
         platform: str,
@@ -143,7 +148,7 @@ class HTTP:
             )
         )
 
-    # GetFullMatch => GetMatchStats
+    # Original client : GetFullMatch => GetMatchStats
     async def GetMatchStats(
         self, title: str, platform: str, mode: str, matchId: int, language: str
     ):
