@@ -3,3 +3,6 @@
 __pycache__
 .vscode/
 .vscode/settings.json
+model.py
+plan.py
+testGG.ipynb

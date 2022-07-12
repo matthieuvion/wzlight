@@ -1,97 +1,34 @@
-import random
-
 import httpx
-
-from .client import Client
-from .http import HTTP
+import urllib.parse
 
 
 class Auth:
-    """
-    Call of Duty authorization flow, using Single Sign-on (SSO)
-    """
+    xsrf = "68e8b62e-1d9d-4ce1-b93f-cbe5ff31a041"
+    base_cookie = "new_SiteId=cod; ACT_SSO_LOCALE=en_US;country=US;"
+    cookie = '{base_cookie}ACT_SSO_COOKIE={sso};XSRF-TOKEN={xsrf};API_CSRF_TOKEN={xsrf};ACT_SSO_EVENT="LOGIN_SUCCESS:1644346543228";ACT_SSO_COOKIE_EXPIRY=1645556143194;comid=cod;ssoDevId=63025d09c69f47dfa2b8d5520b5b73e4;tfa_enrollment_seen=true;gtm.custom.bot.flag=human;'
 
-    registerDeviceUrl = "https://profile.callofduty.com/cod/mapp/registerDevice"
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/74.0.3729.169 Safari/537.36",
+        "Content-Type": "application/json",
+        "X-XSRF-TOKEN": xsrf,
+        "X-CSRF-TOKEN": xsrf,
+        "Atvi-Auth": None,
+        "ACT_SSO_COOKIE": None,
+        "atkn": None,
+        "cookie": None,
+    }
 
-    _accessToken = None
-    _deviceId = None
-
-    def __init__(self, sso: str = None):
+    def __init__(self, sso=None):
         self.sso = sso
         self.session = httpx.AsyncClient()
 
         if self.sso is not None:
-            self.session.cookies.set("ACT_SSO_COOKIE", self.sso)
-
-    @property
-    def AccessToken(self):
-        """
-        Returns
-        -------
-        str
-            Access Token which is set during the device registration phase
-            of authentication.
-        """
-
-        if self._accessToken is None:
-            raise Exception("Access Token is null, not authenticated")
-
-        return self._accessToken
-
-    @property
-    def DeviceId(self):
-        """
-        Returns
-        -------
-        str
-            Device ID which is set during the device registration phase
-            of authentication.
-        """
-
-        if self._deviceId is None:
-            raise Exception("DeviceId is null, not authenticated")
-
-        return self._deviceId
-
-    async def RegisterDevice(self):
-        """
-        Generate and register a Device ID with the Call of Duty API. Set
-        the corresponding Access Token if successful.
-        """
-
-        self._deviceId = hex(random.getrandbits(128)).lstrip("0x")
-        body = {"deviceId": self.DeviceId}
-
-        async with self.session as client:
-            res = await client.post(self.registerDeviceUrl, json=body)
-
-            if res.status_code != 200:
-                raise Exception(
-                    f"Failed to register fake device (HTTP {res.status_code})"
-                )
-
-            data = res.json()
-            self._accessToken = dict(data)["data"]["authHeader"]
-
-
-# // Original client : removed authentification with email/password, doable but now need a Captcha Solver...
-async def LoginWithSSO(sso: str = None):
-    """
-    Login to COD API. Requires Single Sign-on (sso) cookie value.
-    Inspect/find ACT SSO cookie while login-in Activisition through your platform of choice (bnet, xbox etc.)
-    Parameters
-    ----------
-    sso: str, optional
-        Activision single sign-on cookie value.
-    Returns
-    -------
-    object
-        Authenticated Call of Duty client.
-    """
-
-    auth = Auth(sso)
-
-    if sso is not None:
-        await auth.RegisterDevice()
-
-        return Client(HTTP(auth))
+            self.sso = sso
+            self.headers = Auth.headers
+            self.headers["Atvi-Auth"] = sso
+            self.headers["ACT_SSO_COOKIE"] = sso
+            self.headers["atkn"] = sso
+            self.headers["cookie"] = Auth.cookie.format(
+                base_cookie=Auth.base_cookie, sso=sso, xsrf=Auth.xsrf
+            )
+            self.loggedIn = True
