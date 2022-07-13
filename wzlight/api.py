@@ -111,7 +111,7 @@ class Api:
         return data["data"]["matches"]
 
     async def GetMatches(self, platform, username):
-        """Get username's last 1000 matches with timestamps, matchIds, mapId, platform (NO stats)"""
+        """Get username's last 1000 matches with timestamp, matchId, type, mapId, platform (NO stats)"""
 
         url = Api.baseUrl + Api.Endpoints.matches.value.format(
             platform=platform,
@@ -119,7 +119,7 @@ class Api:
             username=urllib.parse.quote(username),
         )
         data = await self._SendRequest(url)
-        return data["data"]["matches"]
+        return data["data"]
 
     async def GetMatchesWithDate(
         self, platform, username, startTimeStamp, endTimestamp
@@ -145,4 +145,4 @@ class Api:
             matchId=matchId,
         )
         data = await self._SendRequest(url)
-        return data["data"]["matches"]
+        return data["data"]["allPlayers"]
