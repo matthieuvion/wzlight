@@ -1,1 +1,1 @@
-<p align="center">![logo](https://github.com/matthieuvion/wzlight/blob/main/logo.png)<p>
+<p align="center">![logo](https://github.com/matthieuvion/wzlight/blob/main/logo.png)</p>
