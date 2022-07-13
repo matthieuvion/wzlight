@@ -4,7 +4,7 @@ import requests
 import httpx
 import urllib.parse
 
-from auth import Auth
+from .auth import Auth
 
 
 class Api:
@@ -64,7 +64,8 @@ class Api:
 
         res = await self.session.request("GET", url=url, headers=self.headers)
         if 300 > res.status_code >= 200:
-            return res.json()
+            data = res.json()
+            return data
         else:
             print(f"Error {res.status_code}.\n{res}")
 
@@ -76,7 +77,8 @@ class Api:
             endpointType="uno" if platform == Api.Platforms.ACTIVISION else "gamer",
             username=urllib.parse.quote(username),
         )
-        return await self._SendRequest(url)["data"]
+        data = await self._SendRequest(url)
+        return data["data"]
 
     async def GetRecentMatches(self, platform, username):
         """Get username's 20 recent matches.
@@ -88,7 +90,8 @@ class Api:
             endpointType="uno" if platform == Api.Platforms.ACTIVISION else "gamer",
             username=urllib.parse.quote(username),
         )
-        return await self._SendRequest(url)["data"]["matches"]
+        data = await self._SendRequest(url)
+        return data["data"]["matches"]
 
     async def GetRecentMatchesWithDate(
         self, platform, username, startTimestamp, endTimestamp
@@ -104,7 +107,8 @@ class Api:
             startTimestamp=startTimestamp,
             endTimestamp=endTimestamp,
         )
-        return await self._SendRequest(url)["data"]["matches"]
+        data = await self._SendRequest(url)
+        return data["data"]["matches"]
 
     async def GetMatches(self, platform, username):
         """Get username's last 1000 matches with timestamps, matchIds, mapId, platform (NO stats)"""
@@ -114,7 +118,8 @@ class Api:
             endpointType="uno" if platform == Api.Platforms.ACTIVISION else "gamer",
             username=urllib.parse.quote(username),
         )
-        return await self._SendRequest(url)["data"]
+        data = await self._SendRequest(url)
+        return data["data"]["matches"]
 
     async def GetMatchesWithDate(
         self, platform, username, startTimeStamp, endTimestamp
@@ -128,7 +133,8 @@ class Api:
             startTimeStamp=startTimeStamp,
             endTimestamp=endTimestamp,
         )
-        return await self._SendRequest(url)["data"]
+        data = await self._SendRequest(url)
+        return data["data"]["matches"]
 
     async def GetMatchDetails(self, platform, matchId: int):
         """Get ALL players detailed stats for one match, given a specified match id"""
@@ -138,4 +144,5 @@ class Api:
             endpointType="uno" if platform == Api.Platforms.ACTIVISION else "gamer",
             matchId=matchId,
         )
-        return await self._SendRequest(url)["data"]["allPlayers"]
+        data = await self._SendRequest(url)
+        return data["data"]["matches"]
