@@ -21,8 +21,12 @@ class Api:
         profile = "/stats/cod/v1/title/mw/platform/{platform}/{endpointType}/{username}/profile/type/wz"
         # Returns 20 recent matches with everything from team name, team placement to the loadouts everyone used, as well as a summary of your own stats for those matches
         recentMatches = "/crm/cod/v2/title/mw/platform/{platform}/{endpointType}/{username}/matches/wz/start/0/end/0/details"
+        # Returns (up to) 20 recent matches, specifying end/start times
+        recentMatchesWithDate = "/crm/cod/v2/title/mw/platform/{platform}/{endpointType}/{username}/matches/wz/start/{startTimestamp}/end/{endTimestamp}/details"
         # Returns 1000 recent matches, with only the timestamps, matchIds, mapId, and platform
         matches = "/crm/cod/v2/title/mw/platform/{platform}/{endpointType}/{username}/matches/wz/start/0/end/0"
+        # Returns the details of the specific match per player; each players stats from the loadout they used to the kills they got is listed
+        matchesWithDate = "/crm/cod/v2/title/mw/platform/{platform}/{endpointType}/{username}/matches/wz/start/{startTimestamp}/end/{endTimestamp}"
         # Returns the details of the specific match per player; each players stats from the loadout they used to the kills they got is listed
         matchDetails = (
             "/crm/cod/v2/title/mw/platform/{platform}/fullMatch/wz/{matchId}/en"
@@ -34,19 +38,18 @@ class Api:
     def Login(self, sso):
         """
         Login to the Call of Duty API using single sign-on (SSO) authentification
-        Method is called once API instance is initialized and set SSO value in client headers.
-        Requires a sso cookie value.
+        Method is called on API instance initialization and set the SSO value in headers.
 
         Parameters
         ----------
         sso: str,
             Activision single sign-on cookie value.
-            Inspect browser while loging-in to Activision callofduty ("act_sso_cookie")
+            Inspect browser while loging-in to Activision callofduty and find "act_sso_cookie"
 
         Returns
         -------
         object
-            Authenticated Call of Duty client
+            Authenticated API instance with sso filled-in headers
         """
         auth = Auth(sso)
 
@@ -58,55 +61,88 @@ class Api:
             return auth
 
         else:
-            raise ValueError("sso value must be provided to authenticate to COD API")
+            raise ValueError("sso value must be provided to communicate to COD API")
+
+    async def _SendGetRequest(self, url):
+        """Send a single GET request through httpx.AsyncClient.request"""
+
+        res = await self.session.request("GET", url=url, headers=self.headers)
+        if 300 > res.status_code >= 200:
+            return res.json()
+        else:
+            print(f"Error {res.status_code}.\n{res}")
 
     async def GetProfile(self, platform, username):
+        """Get Player Profile"""
+
         url = Api.baseUrl + Api.Endpoints.profile.value.format(
             platform=platform,
             endpointType="uno" if platform == Api.Platforms.ACTIVISION else "gamer",
             username=urllib.parse.quote(username),
         )
-        async with self.session as client:
-            res = await client.get(url=url, headers=self.headers)
-            if 300 > res.status_code >= 200:
-                return res.json
-            else:
-                print(f"Error {res.status_code}.\n{res}")
+        return await self._SendGetRequest(url)["data"]
 
-    async def GetMatches(self, platform, username):
-        url = Api.baseUrl + Api.Endpoints.matches.value.format(
-            platform=platform,
-            endpointType="uno" if platform == Api.Platforms.ACTIVISION else "gamer",
-            username=urllib.parse.quote(username),
-        )
-        async with self.session as client:
-            res = await client.get(url=url, headers=self.headers)
-            if 300 > res.status_code >= 200:
-                return res.json
-            else:
-                print(f"Error {res.status_code}.\n{res}")
+    async def GetRecentMatches(self, platform, username):
+        """Get username's 20 recent matches.
+        Each match entry has username (& teammates) stats, loadouts for this match
+        """
 
-    async def GetMatchesDetailed(self, platform, username):
         url = Api.baseUrl + Api.Endpoints.recentMatches.value.format(
             platform=platform,
             endpointType="uno" if platform == Api.Platforms.ACTIVISION else "gamer",
             username=urllib.parse.quote(username),
         )
-        async with self.session as client:
-            res = await client.get(url=url, headers=self.headers)
-            if 300 > res.status_code >= 200:
-                return res.json
-            else:
-                print(f"Error {res.status_code}.\n{res}")
+        return await self._SendGetRequest(url)["data"]["matches"]
 
-    async def GetMatchStats(self, platform, matchId):
+    async def GetRecentMatchesWithDate(
+        self, platform, username, startTimestamp, endTimestamp
+    ):
+        """Get username's recent matches between two dates.
+        Each match entry has username (& teammates) stats, loadouts for this match
+        """
+
+        url = Api.baseUrl + Api.Endpoints.recentMatchesWithDate.value.format(
+            platform=platform,
+            endpointType="uno" if platform == Api.Platforms.ACTIVISION else "gamer",
+            username=urllib.parse.quote(username),
+            startTimestamp=startTimestamp,
+            endTimestamp=endTimestamp,
+        )
+        return await self._SendGetRequest(url)["data"]["matches"]
+
+        # ["data"]["allPlayers"]
+
+    async def GetMatches(self, platform, username):
+        """Get username's last 1000 matches with timestamps, matchIds, mapId, platform (NO stats)"""
+
+        url = Api.baseUrl + Api.Endpoints.matches.value.format(
+            platform=platform,
+            endpointType="uno" if platform == Api.Platforms.ACTIVISION else "gamer",
+            username=urllib.parse.quote(username),
+        )
+        return await self._SendGetRequest(url)["data"]
+
+    async def GetMatchesWithDate(
+        self, platform, username, startTimeStamp, endTimestamp
+    ):
+        """Get username's matches between two dates, with timestamps, matchIds, mapId, platform (NO stats)"""
+
+        url = Api.baseUrl + Api.Endpoints.matchesWithDate.value.format(
+            platform=platform,
+            endpointType="uno" if platform == Api.Platforms.ACTIVISION else "gamer",
+            username=urllib.parse.quote(username),
+            startTimeStamp=startTimeStamp,
+            endTimestamp=endTimestamp,
+        )
+        return await self._SendGetRequest(url)["data"]
+
+    async def GetMatchDetails(self, platform, username, matchId: int):
+        """Get ALL players detailed stats for one match, given a specified match id"""
+
         url = Api.baseUrl + Api.Endpoints.matchDetails.value.format(
             platform=platform,
+            endpointType="uno" if platform == Api.Platforms.ACTIVISION else "gamer",
+            username=urllib.parse.quote(username),
             matchId=matchId,
         )
-        async with self.session as client:
-            res = await client.get(url=url, headers=self.headers)
-            if 300 > res.status_code >= 200:
-                return res.json
-            else:
-                print(f"Error {res.status_code}.\n{res}")
+        return await self._SendGetRequest(url)["data"]

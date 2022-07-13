@@ -8,8 +8,8 @@ class Auth:
     deviceId = hex(random.getrandbits(128)).lstrip(
         "0x"
     )  #  any fake deviceId would works
-    # deviceId = 63025d09c69f47dfa2b8d5520b5b73e4
-    xsrf = "68e8b62e-1d9d-4ce1-b93f-cbe5ff31a041"
+
+    xsrf = "mtv2tU5lFIz9ic_V7a4mzmwCZZTe3iNGTkwmkjovIjJdO_VFJvcRHVFJKsQlVFUA"
     base_cookie = "new_SiteId=cod; ACT_SSO_LOCALE=en_US;country=US;"
     cookie = '{base_cookie}ACT_SSO_COOKIE={sso};XSRF-TOKEN={xsrf};API_CSRF_TOKEN={xsrf};ACT_SSO_EVENT="LOGIN_SUCCESS:1644346543228";ACT_SSO_COOKIE_EXPIRY=1645556143194;comid=cod;ssoDevId={deviceId};tfa_enrollment_seen=true;gtm.custom.bot.flag=human;'
 
