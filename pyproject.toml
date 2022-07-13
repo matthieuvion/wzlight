@@ -11,7 +11,6 @@ python-dotenv = "^0.20.0"
 backoff = "^2.1.2"
 async-lru = "^1.0.3"
 jupyterlab = "^3.4.3"
-WarzoneStats = "^0.1.2"
 
 [tool.poetry.dev-dependencies]
 black = {version = "^22.3.0", allow-prereleases = true}
