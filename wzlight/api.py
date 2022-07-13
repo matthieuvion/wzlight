@@ -33,9 +33,9 @@ class Api:
         )
 
     def __init__(self, sso):
-        self.Login(sso)
+        self._Login(sso)
 
-    def Login(self, sso):
+    def _Login(self, sso):
         """
         Login to the Call of Duty API using single sign-on (SSO) authentification
         Method is called on API instance initialization and set the SSO value in headers.
@@ -45,12 +45,8 @@ class Api:
         sso: str,
             Activision single sign-on cookie value.
             Inspect browser while loging-in to Activision callofduty and find "act_sso_cookie"
-
-        Returns
-        -------
-        object
-            Authenticated API instance with sso filled-in headers
         """
+
         auth = Auth(sso)
 
         if sso is not None:
@@ -63,7 +59,7 @@ class Api:
         else:
             raise ValueError("sso value must be provided to communicate to COD API")
 
-    async def _SendGetRequest(self, url):
+    async def _SendRequest(self, url):
         """Send a single GET request through httpx.AsyncClient.request"""
 
         res = await self.session.request("GET", url=url, headers=self.headers)
@@ -80,7 +76,7 @@ class Api:
             endpointType="uno" if platform == Api.Platforms.ACTIVISION else "gamer",
             username=urllib.parse.quote(username),
         )
-        return await self._SendGetRequest(url)["data"]
+        return await self._SendRequest(url)["data"]
 
     async def GetRecentMatches(self, platform, username):
         """Get username's 20 recent matches.
@@ -92,7 +88,7 @@ class Api:
             endpointType="uno" if platform == Api.Platforms.ACTIVISION else "gamer",
             username=urllib.parse.quote(username),
         )
-        return await self._SendGetRequest(url)["data"]["matches"]
+        return await self._SendRequest(url)["data"]["matches"]
 
     async def GetRecentMatchesWithDate(
         self, platform, username, startTimestamp, endTimestamp
@@ -108,9 +104,7 @@ class Api:
             startTimestamp=startTimestamp,
             endTimestamp=endTimestamp,
         )
-        return await self._SendGetRequest(url)["data"]["matches"]
-
-        # ["data"]["allPlayers"]
+        return await self._SendRequest(url)["data"]["matches"]
 
     async def GetMatches(self, platform, username):
         """Get username's last 1000 matches with timestamps, matchIds, mapId, platform (NO stats)"""
@@ -120,7 +114,7 @@ class Api:
             endpointType="uno" if platform == Api.Platforms.ACTIVISION else "gamer",
             username=urllib.parse.quote(username),
         )
-        return await self._SendGetRequest(url)["data"]
+        return await self._SendRequest(url)["data"]
 
     async def GetMatchesWithDate(
         self, platform, username, startTimeStamp, endTimestamp
@@ -134,15 +128,14 @@ class Api:
             startTimeStamp=startTimeStamp,
             endTimestamp=endTimestamp,
         )
-        return await self._SendGetRequest(url)["data"]
+        return await self._SendRequest(url)["data"]
 
-    async def GetMatchDetails(self, platform, username, matchId: int):
+    async def GetMatchDetails(self, platform, matchId: int):
         """Get ALL players detailed stats for one match, given a specified match id"""
 
         url = Api.baseUrl + Api.Endpoints.matchDetails.value.format(
             platform=platform,
             endpointType="uno" if platform == Api.Platforms.ACTIVISION else "gamer",
-            username=urllib.parse.quote(username),
             matchId=matchId,
         )
-        return await self._SendGetRequest(url)["data"]
+        return await self._SendRequest(url)["data"]["allPlayers"]
