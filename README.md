@@ -1,11 +1,9 @@
-<div align="center">
-<img src="https://github.com/matthieuvion/wzlight/blob/main/logo.png">
 
-##
+# wzlight
 
 [![MIT License](https://img.shields.io/apm/l/atomic-design-ui.svg?)](https://github.com/tterb/atomic-design-ui/blob/master/LICENSEs)
 [![made-with-python](https://img.shields.io/badge/Made%20with-Python-1f425f.svg)](https://www.python.org/)
-</div>
+
 
 `wzlight` is an asynchronous Python wrapper for the Call of Duty API
 that focuses on Warzone endpoints.
