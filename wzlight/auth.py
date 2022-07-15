@@ -24,8 +24,14 @@ class Auth:
         "cookie": None,
     }
 
+    # COD API is not officially supported, this no no official documentation
     # default httpx.timeout is 5 sec, sometimes not enough for COD API
+    # We set a --for now, basic & quite harsh limit in case
+    # an app would use client methods (e.g GetMatch) concurrently
+    # One of said limit would be be 200 calls per hour
+
     timeout = httpx.Timeout(15.0, connect=15.0)
+    limits = httpx.Limits(max_keepalive_connections=2, max_connections=4)
     session = httpx.AsyncClient(timeout=timeout)
 
     def __init__(self, sso=None):

@@ -28,9 +28,7 @@ class Api:
         # Returns the details of the specific match per player; each players stats from the loadout they used to the kills they got is listed
         matchesWithDate = "/crm/cod/v2/title/mw/platform/{platform}/{endpointType}/{username}/matches/wz/start/{startTimestamp}/end/{endTimestamp}"
         # Returns the details of the specific match per player; each players stats from the loadout they used to the kills they got is listed
-        matchDetails = (
-            "/crm/cod/v2/title/mw/platform/{platform}/fullMatch/wz/{matchId}/en"
-        )
+        match = "/crm/cod/v2/title/mw/platform/{platform}/fullMatch/wz/{matchId}/en"
 
     def __init__(self, sso):
         self._Login(sso)
@@ -38,7 +36,7 @@ class Api:
     def _Login(self, sso):
         """
         Login to the Call of Duty API using single sign-on (SSO) authentification
-        Method is called on API instance initialization and set the SSO value in headers.
+        Method is called on API instance initialization and set the SSO value in client headers.
 
         Parameters
         ----------
@@ -57,20 +55,20 @@ class Api:
             return auth
 
         else:
-            raise ValueError("sso value must be provided to communicate to COD API")
+            raise ValueError("sso value must be provided to communicate with COD API")
 
     async def _SendRequest(self, url):
-        """Send a single GET request through httpx.AsyncClient.request"""
+        """Send a single GET request with httpx.AsyncClient.request"""
 
-        res = await self.session.request("GET", url=url, headers=self.headers)
-        if 300 > res.status_code >= 200:
-            data = res.json()
+        response = await self.session.request("GET", url=url, headers=self.headers)
+        if 300 > response.status_code >= 200:
+            data = response.json()
             return data
         else:
-            print(f"Error {res.status_code}.\n{res}")
+            print(f"Error {response.status_code}.\n{response}")
 
     async def GetProfile(self, platform, username):
-        """Get Player Profile"""
+        """Get Player Profile, platform must matches username (e.g acti username =/ bnet)"""
 
         url = Api.baseUrl + Api.Endpoints.profile.value.format(
             platform=platform,
@@ -136,10 +134,10 @@ class Api:
         data = await self._SendRequest(url)
         return data["data"]["matches"]
 
-    async def GetMatchDetails(self, platform, matchId: int):
+    async def GetMatch(self, platform, matchId: int):
         """Get ALL players detailed stats for one match, given a specified match id"""
 
-        url = Api.baseUrl + Api.Endpoints.matchDetails.value.format(
+        url = Api.baseUrl + Api.Endpoints.match.value.format(
             platform=platform,
             endpointType="uno" if platform == Api.Platforms.ACTIVISION else "gamer",
             matchId=matchId,

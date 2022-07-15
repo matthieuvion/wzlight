@@ -1,8 +1,12 @@
 [tool.poetry]
 name = "wzlight"
-version = "0.1.0"
-description = "light async COD API wrapper for Warzone"
+version = "0.1.1"
+description = "Light asynchronous wrapper for COD Warzone API"
 authors = ["Matthieu Vion <viomatthieu@gmail.com>"]
+license = "MIT"
+readme = "README.md"
+repository = "https://github.com/matthieuvion/wzlight"
+keywords = ["warzone", "API", "asynchronous", "httpx"]
 
 [tool.poetry.dependencies]
 python = "^3.10"
