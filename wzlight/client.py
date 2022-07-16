@@ -11,9 +11,9 @@ class Client:
     - httpx library used to build wzlight client
     - SSO token value can be found in browser while login-in to callofduty.com. Expiration date is unknown to infinite.
     - Timeout : default timeout (httpx.timeout is 5 sec) have been increased
-    - Concurrency : a quite harsh limit have been set, though should be handled at a higher (i.e. app) level
+    - Concurrency : a quite harsh limit have been set, though it should be handled at a higher (i.e. app) level
     - One of rate limit is said to be 200 calls per 30mn-hour, but more restrictions apply under the hood (endpoint variations, IP etc.)
-    - Client is set as HTTP/2 but as verified with response.http_version protocol still HTTP/1.1
+    - Client is set as HTTP/2 but as verified with response.http_version server side protocol is HTTP/1.1
     """
 
     deviceId = hex(random.getrandbits(128)).lstrip(

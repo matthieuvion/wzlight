@@ -22,7 +22,7 @@ class Api:
         Parameters
         ----------
         sso: str,
-            Activision single sign-on cookie value.
+            Activision single sign-on cookie value ("MjYy[...]xNzAw" alike).
             Inspect browser while loging-in to Activision callofduty and find "act_sso_cookie"
         """
 
@@ -38,6 +38,21 @@ class Api:
         else:
             raise ValueError("sso value must be provided to communicate with COD API")
 
+    def _SetPlatform(self, platform):
+        if platform not in [platform.value for platform in Platforms]:
+            raise ValueError(
+                "platform arg must be either:\nbattle, xbl, psn, acti, uno"
+            )
+        else:
+            platform = (
+                "uno" if platform in [Platforms.ACTIVISION, Platforms.UNO] else platform
+            )
+        return platform
+
+    def _SetEndpointType(self, platform):
+        endpointType = "id" if platform == Platforms.UNO else "gamer"
+        return endpointType
+
     async def _SendRequest(self, url):
         """Send a single GET request with httpx.AsyncClient.request"""
 
@@ -46,7 +61,6 @@ class Api:
 
         response = await self.session.request("GET", url=url, headers=self.headers)
         if 300 > response.status_code >= 200:
-            print(response.http_version)
             data = response.json()
             return data
         else:
@@ -56,8 +70,8 @@ class Api:
         """Get Player Profile, platform must matches username (e.g acti username =/ bnet)"""
 
         url = Api.baseUrl + Endpoints.profile.value.format(
-            platform=platform,
-            endpointType="uno" if platform == Platforms.ACTIVISION else "gamer",
+            platform=self._SetPlatform(platform),
+            endpointType=self._SetEndpointType(platform),
             username=urllib.parse.quote(username),
         )
         data = await self._SendRequest(url)
@@ -69,36 +83,36 @@ class Api:
         """
 
         url = Api.baseUrl + Endpoints.recentMatches.value.format(
-            platform=platform,
-            endpointType="uno" if platform == Platforms.ACTIVISION else "gamer",
+            platform=self._SetPlatform(platform),
+            endpointType=self._SetEndpointType(platform),
             username=urllib.parse.quote(username),
         )
         data = await self._SendRequest(url)
         return data["data"]["matches"]
 
-    async def GetRecentMatchesWithDate(
-        self, platform, username, startTimestamp, endTimestamp
-    ):
-        """Get username's recent matches between two dates.
+    async def GetRecentMatchesWithDate(self, platform, username, endTimestamp):
+        """Get username's recent matches between two dates (startTimestamp is always 0, though)
         Each match entry has username (& teammates) stats, loadouts for this match
         """
 
         url = Api.baseUrl + Endpoints.recentMatchesWithDate.value.format(
-            platform=platform,
-            endpointType="uno" if platform == Platforms.ACTIVISION else "gamer",
+            platform=self._SetPlatform(platform),
+            endpointType=self._SetEndpointType(platform),
             username=urllib.parse.quote(username),
-            startTimestamp=startTimestamp,
+            startTimestamp=0,
             endTimestamp=endTimestamp,
         )
         data = await self._SendRequest(url)
         return data["data"]["matches"]
 
     async def GetMatches(self, platform, username):
-        """Get username's last 1000 matches with timestamp, matchId, type, mapId, platform (NO stats)"""
+        """Get username's last 1000 matches with timestamp, matchId, type, mapId, platform (NO stats)
+        TODO : check is StartTimeStamp is allowed or if same behavior as RecentMatchesWithDate
+        """
 
         url = Api.baseUrl + Endpoints.matches.value.format(
-            platform=platform,
-            endpointType="uno" if platform == Platforms.ACTIVISION else "gamer",
+            platform=self._SetPlatform(platform),
+            endpointType=self._SetEndpointType(platform),
             username=urllib.parse.quote(username),
         )
         data = await self._SendRequest(url)
@@ -110,8 +124,8 @@ class Api:
         """Get username's matches between two dates, with timestamps, matchIds, mapId, platform (NO stats)"""
 
         url = Api.baseUrl + Endpoints.matchesWithDate.value.format(
-            platform=platform,
-            endpointType="uno" if platform == Platforms.ACTIVISION else "gamer",
+            platform=self._SetPlatform(platform),
+            endpointType=self._SetEndpointType(platform),
             username=urllib.parse.quote(username),
             startTimeStamp=startTimeStamp,
             endTimestamp=endTimestamp,
@@ -123,8 +137,7 @@ class Api:
         """Get ALL players detailed stats for one match, given a specified match id"""
 
         url = Api.baseUrl + Endpoints.match.value.format(
-            platform=platform,
-            endpointType="uno" if platform == Platforms.ACTIVISION else "gamer",
+            platform=self._SetPlatform(platform),
             matchId=matchId,
         )
         data = await self._SendRequest(url)
