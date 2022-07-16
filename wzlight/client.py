@@ -1,10 +1,21 @@
 import random
 
 import httpx
-import urllib.parse
 
 
-class Auth:
+class Client:
+
+    """
+    COD API is not officially supported.
+
+    - httpx library used to build wzlight client
+    - SSO token value can be found in browser while login-in to callofduty.com. Expiration date is unknown to infinite.
+    - Timeout : default timeout (httpx.timeout is 5 sec) have been increased
+    - Concurrency : a quite harsh limit have been set, though should be handled at a higher (i.e. app) level
+    - One of rate limit is said to be 200 calls per 30mn-hour, but more restrictions apply under the hood (endpoint variations, IP etc.)
+    - Client is set as HTTP/2 but as verified with response.http_version protocol still HTTP/1.1
+    """
+
     deviceId = hex(random.getrandbits(128)).lstrip(
         "0x"
     )  #  any fake deviceId would works
@@ -24,27 +35,21 @@ class Auth:
         "cookie": None,
     }
 
-    # COD API is not officially supported, this no no official documentation
-    # default httpx.timeout is 5 sec, sometimes not enough for COD API
-    # We set a --for now, basic & quite harsh limit in case
-    # an app would use client methods (e.g GetMatch) concurrently
-    # One of said limit would be be 200 calls per hour
-
     timeout = httpx.Timeout(15.0, connect=15.0)
-    limits = httpx.Limits(max_keepalive_connections=2, max_connections=4)
-    session = httpx.AsyncClient(timeout=timeout)
+    limits = httpx.Limits(max_keepalive_connections=2, max_connections=2)
+    session = httpx.AsyncClient(http2=True, timeout=timeout, limits=limits)
 
     def __init__(self, sso=None):
         self.sso = sso
         if self.sso is not None:
             self.sso = sso
-            self.headers = Auth.headers
+            self.headers = Client.headers
             self.headers["Atvi-Auth"] = sso
             self.headers["ACT_SSO_COOKIE"] = sso
             self.headers["atkn"] = sso
-            self.headers["cookie"] = Auth.cookie.format(
-                base_cookie=Auth.base_cookie,
+            self.headers["cookie"] = Client.cookie.format(
+                base_cookie=Client.base_cookie,
                 sso=sso,
-                xsrf=Auth.xsrf,
-                deviceId=Auth.deviceId,
+                xsrf=Client.xsrf,
+                deviceId=Client.deviceId,
             )
