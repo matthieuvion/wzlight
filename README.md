@@ -77,7 +77,7 @@ async def main():
 if __name__ == "__main__":
     asyncio.run(main())
 ```
-### Focus : example of a concurrent run
+#### Focus : example of a concurrent run
 
 ```
     # On match details endpoint, given a list of matchIds
