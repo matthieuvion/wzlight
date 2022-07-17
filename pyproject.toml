@@ -9,7 +9,7 @@ repository = "https://github.com/matthieuvion/wzlight"
 keywords = ["warzone", "API", "asynchronous", "httpx"]
 
 [tool.poetry.dependencies]
-python = "^3.10"
+python = "^3.9"
 httpx = {extras = ["http2"], version = "^0.23.0"}
 python-dotenv = "^0.20.0"
 backoff = "^2.1.2"
