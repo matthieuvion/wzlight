@@ -43,7 +43,17 @@ async def main():
     match_details_short = [player for player in match_details[:2]]
     pprint(match_details_short, depth=3)
 
-    # Example on how to run *concurrently* passing a list of 10 matchId
+    # Example on how to run *concurrently* passing a list of matchId
+
+    limit = asyncio.Semaphore(2)
+
+    async def safe_GetMatch(platform, matchId):
+        # no more than two concurrent tasks
+        async with limit:
+            r = await api.GetMatch(platform, matchId)
+        if limit.locked():
+            print("Concurrency limit reached, waiting ...")
+            await asyncio.sleep(1)
 
     matchIds = [
         11378702801403672847,
@@ -56,11 +66,11 @@ async def main():
         7897970481732864368,
     ]
 
-    match_list = []
+    tasks = []
     for matchId in matchIds:
-        match_list.append(api.GetMatch(platform, matchId))
-    await asyncio.gather(*match_list)
-    print(len(match_list))
+        tasks.append(safe_GetMatch(platform, matchId))
+    await asyncio.gather(*tasks)
+    print(len(tasks))
 
 
 if __name__ == "__main__":

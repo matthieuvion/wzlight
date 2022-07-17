@@ -74,7 +74,29 @@ async def main():
     match_details_short = [player for player in match_details[:2]]
     pprint(match_details_short, depth=3)
 
-    # Example on how to run *concurrently* passing a list of 10 matchId
+if __name__ == "__main__":
+    asyncio.run(main())
+```
+### Focus : example of a concurrent run
+
+```
+    # On match details endpoint, given a list of matchIds
+
+    # COD API is unofficial and undocumented, rate limits / restrictions are not known
+    # However you should --at least, handle some concurrency limits e.g for fetching a batch of matchs
+    # See. httpx.Limits, async.Semaphore or other librairies such as aiometer
+
+    # basic concurrency limit using async.Semaphore :
+    
+    limit = asyncio.Semaphore(2)
+
+    async def safe_GetMatch(platform, matchId):
+        # no more than two concurrent tasks
+        async with limit:
+            r = await api.GetMatch(platform, matchId)
+        if limit.locked():
+            print("Concurrency limit reached, waiting ...")
+            await asyncio.sleep(1)
 
     matchIds = [
         11378702801403672847,
@@ -87,17 +109,12 @@ async def main():
         7897970481732864368,
     ]
 
-    match_list = []
+    tasks = []
     for matchId in matchIds:
-        match_list.append(api.GetMatch(platform, matchId))
-    await asyncio.gather(*match_list)
-    print(len(match_list))
-
-
-if __name__ == "__main__":
-    asyncio.run(main())
+        tasks.append(safe_GetMatch(platform, matchId))
+    await asyncio.gather(*tasks)
+    print(len(tasks))
 ```
-
 
 ## Acknowledgements
 ![Love](https://img.shields.io/badge/Love-pink?style=flat-square&logo=data:image/svg%2bxml;base64,PHN2ZyByb2xlPSJpbWciIHZpZXdCb3g9IjAgMCAyNCAyNCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48dGl0bGU+R2l0SHViIFNwb25zb3JzIGljb248L3RpdGxlPjxwYXRoIGQ9Ik0xNy42MjUgMS40OTljLTIuMzIgMC00LjM1NCAxLjIwMy01LjYyNSAzLjAzLTEuMjcxLTEuODI3LTMuMzA1LTMuMDMtNS42MjUtMy4wM0MzLjEyOSAxLjQ5OSAwIDQuMjUzIDAgOC4yNDljMCA0LjI3NSAzLjA2OCA3Ljg0NyA1LjgyOCAxMC4yMjdhMzMuMTQgMzMuMTQgMCAwIDAgNS42MTYgMy44NzZsLjAyOC4wMTcuMDA4LjAwMy0uMDAxLjAwM2MuMTYzLjA4NS4zNDIuMTI2LjUyMS4xMjUuMTc5LjAwMS4zNTgtLjA0MS41MjEtLjEyNWwtLjAwMS0uMDAzLjAwOC0uMDAzLjAyOC0uMDE3YTMzLjE0IDMzLjE0IDAgMCAwIDUuNjE2LTMuODc2QzIwLjkzMiAxNi4wOTYgMjQgMTIuNTI0IDI0IDguMjQ5YzAtMy45OTYtMy4xMjktNi43NS02LjM3NS02Ljc1em0tLjkxOSAxNS4yNzVhMzAuNzY2IDMwLjc2NiAwIDAgMS00LjcwMyAzLjMxNmwtLjAwNC0uMDAyLS4wMDQuMDAyYTMwLjk1NSAzMC45NTUgMCAwIDEtNC43MDMtMy4zMTZjLTIuNjc3LTIuMzA3LTUuMDQ3LTUuMjk4LTUuMDQ3LTguNTIzIDAtMi43NTQgMi4xMjEtNC41IDQuMTI1LTQuNSAyLjA2IDAgMy45MTQgMS40NzkgNC41NDQgMy42ODQuMTQzLjQ5NS41OTYuNzk3IDEuMDg2Ljc5Ni40OS4wMDEuOTQzLS4zMDIgMS4wODUtLjc5Ni42My0yLjIwNSAyLjQ4NC0zLjY4NCA0LjU0NC0zLjY4NCAyLjAwNCAwIDQuMTI1IDEuNzQ2IDQuMTI1IDQuNSAwIDMuMjI1LTIuMzcgNi4yMTYtNS4wNDggOC41MjN6Ii8+PC9zdmc+)  

@@ -8,12 +8,12 @@ class Client:
     """
     COD API is not officially supported.
 
-    - httpx library used to build wzlight client
+    - httpx library is used to build the wzlight client
     - SSO token value can be found in browser while login-in to callofduty.com. Expiration date is unknown to infinite.
-    - Timeout : default timeout (httpx.timeout is 5 sec) have been increased
-    - Concurrency : a quite harsh limit have been set, though it should be handled at a higher (i.e. app) level
+    - Timeout : default timeout (httpx.timeout = 5 sec) have been increased
     - One of rate limit is said to be 200 calls per 30mn-hour, but more restrictions apply under the hood (endpoint variations, IP etc.)
     - Client is set as HTTP/2 but as verified with response.http_version server side protocol is HTTP/1.1
+    - Concurrency limit (e.g. for several matches data collection) should be handled at a higher (app) level, through httpx.Limits, asyncio Semaphore or external libraries such as aiometer
     """
 
     deviceId = hex(random.getrandbits(128)).lstrip(
@@ -36,8 +36,7 @@ class Client:
     }
 
     timeout = httpx.Timeout(15.0, connect=15.0)
-    limits = httpx.Limits(max_keepalive_connections=2, max_connections=2)
-    session = httpx.AsyncClient(http2=True, timeout=timeout, limits=limits)
+    session = httpx.AsyncClient(http2=True, timeout=timeout)
 
     def __init__(self, sso=None):
         self.sso = sso

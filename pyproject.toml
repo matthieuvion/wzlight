@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "wzlight"
-version = "0.1.2"
+version = "0.1.3"
 description = "Light asynchronous wrapper for COD Warzone API"
 authors = ["Matthieu Vion <viomatthieu@gmail.com>"]
 license = "MIT"
