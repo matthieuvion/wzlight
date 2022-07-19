@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "wzlight"
-version = "0.1.33"
+version = "0.1.4"
 description = "Light asynchronous wrapper for COD Warzone API"
 authors = ["Matthieu Vion <viomatthieu@gmail.com>"]
 license = "MIT"
@@ -12,8 +12,6 @@ keywords = ["warzone", "API", "asynchronous", "httpx"]
 python = "^3.9"
 httpx = {extras = ["http2"], version = "^0.23.0"}
 python-dotenv = "^0.19.0"
-backoff = "^2.1.2"
-async-lru = "^1.0.3"
 jupyterlab = "^3.4.3"
 
 [tool.poetry.dev-dependencies]
