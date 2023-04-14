@@ -1,7 +1,8 @@
 
 # wzlight
 
-[![MIT License](https://img.shields.io/apm/l/atomic-design-ui.svg?)](https://github.com/tterb/atomic-design-ui/blob/master/LICENSEs)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![made-with-python](https://img.shields.io/badge/Made%20with-Python-1f425f.svg)](https://www.python.org/)rb/atomic-design-ui/blob/master/LICENSEs)
 [![made-with-python](https://img.shields.io/badge/Made%20with-Python-1f425f.svg)](https://www.python.org/)
 
 
@@ -86,6 +87,7 @@ from pprint import pprint
 
 import httpx
 from dotenv import load_dotenv
+from typing import AsyncContextManager
 
 from wzlight import Api
 
@@ -115,26 +117,31 @@ async def main():
         7897970481732864368,
     ]
 
-    # enclose api.getMatch into safe_GetMatch that adds a Semaphore threshold
+    # enclose api.getMatch into safe_GetMatch that accept a Semaphore threshold arg.
 
     limit = asyncio.Semaphore(2)
 
-    async def safe_GetMatch(httpxClient, platform, matchId):
+    async def safe_GetMatch(httpxClient, platform, matchId, sema: AsyncContextManager):
         # No more than two concurrent tasks. If reaches two, wait 1 sec
-        async with limit:
+        async with sema:
             r = await api.GetMatch(httpxClient, platform, matchId)
-        if limit.locked():
-            print("Concurrency limit reached, waiting ...")
-            await asyncio.sleep(1)
+            if sema.locked():
+                print("Concurrency limit reached, waiting ...")
+                await asyncio.sleep(1)
+            return r
 
     # Do not forget to open Client as context manager :
     async with httpx.AsyncClient() as httpxClient:
-
+	
+        sema = asyncio.Semaphore(2)
+        
         tasks = []
         for matchId in matchIds:
-            tasks.append(safe_GetMatch(httpxClient, platform, matchId))
-        await asyncio.gather(*tasks)
-        print(len(tasks))
+            tasks.append(safe_GetMatch(httpxClient, platform, matchId, sema))
+        results = await asyncio.gather(*tasks, return_exceptions=True)
+        return resultss
+            
+    print(len(results))
 
 
 if __name__ == "__main__":
